@@ -36,7 +36,7 @@
     <!--
        Product Version
     -->
-    <Version>2.1.0</Version>
+    <Version>3.0.0</Version>
 
     <!--
        Host name or IP address of the machine hosting this server
@@ -44,12 +44,12 @@
        This is will become part of the End Point Reference of the
        services deployed on this server instance.
     -->
-    <HostName>api-manager</HostName>
+    <HostName>apim-analytics</HostName>
 
     <!--
     Host name to be used for the Carbon management console
     -->
-    <MgtHostName>api-manager</MgtHostName>
+    <MgtHostName>apim-analytics</MgtHostName>
 
     <!--
         The URL of the back end server. This is where the admin services are hosted and
@@ -73,7 +73,8 @@
     Ex : <Role>.*</Role> means this server can act any role
     -->
     <ServerRoles>
-        <Role>APIManager</Role>
+        <Role>DataAnalyticsServer</Role>
+        <Role>ComplexEventProcessor</Role>
     </ServerRoles>
 
     <!-- uncommnet this line to subscribe to a bam instance automatically -->
