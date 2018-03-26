@@ -31,7 +31,6 @@ services:
     volumes:
       - ./apim-analytics/repository/conf/datasources/analytics-datasources.xml:/home/wso2carbon/wso2das-3.0.0/repository/conf/datasources/analytics-datasources.xml
       - ./apim-analytics/repository/conf/datasources/stats-datasources.xml:/home/wso2carbon/wso2das-3.0.0/repository/conf/datasources/stats-datasources.xml
-      - ./apim-analytics/repository/conf/datasources/master-datasources.xml:/home/wso2carbon/wso2das-3.0.0/repository/conf/datasources/master-datasources.xml
       - ./apim/repository/conf/carbon.xml:/home/wso2carbon/wso2das-3.0.0/repository/conf/carbon.xml
     links:
       - mysql
