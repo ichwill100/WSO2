@@ -1,0 +1,177 @@
+version: '2.3'
+services:
+  mysql:
+    image: mysql:5.7.19
+    ports:
+      - 3306
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+    volumes:
+      - ./mysql/scripts:/docker-entrypoint-initdb.d
+    command: [--ssl=0]
+    healthcheck:
+      test: ["CMD", "mysqladmin" ,"ping", "-uroot", "-proot"]
+      interval: 10s
+      timeout: 60s
+      retries: 5
+  apim-analytics:
+    image: ichwill100/wso2das:3.0.0
+    ports:
+      - "9444:9444"
+      - "9764:9764"
+    healthcheck:
+      test: ["CMD", "curl", "-k", "-f", "https://localhost:9443/carbon/admin/login.jsp"]
+      interval: 10s
+      timeout: 120s
+      retries: 5
+      start_period: 120s
+    depends_on:
+      mysql:
+        condition: service_healthy
+    volumes:
+      - ./apim-analytics/repository/conf/datasources/analytics-datasources.xml:/home/wso2carbon/wso2das-3.0.0/repository/conf/datasources/analytics-datasources.xml
+      - ./apim-analytics/repository/conf/datasources/stats-datasources.xml:/home/wso2carbon/wso2das-3.0.0/repository/conf/datasources/stats-datasources.xml
+      - ./apim/repository/conf/carbon.xml:/home/wso2carbon/wso2das-3.0.0/repository/conf/carbon.xml
+    links:
+      - mysql
+  is-as-keymamanager:
+    image: ichwill100/wso2is-km:5.4.1
+    healthcheck:
+      test: ["CMD", "curl", "-k", "-f", "https://localhost:9443/carbon/admin/login.jsp"]
+      interval: 10s
+      timeout: 120s
+      retries: 15
+      start_period: 120s
+    depends_on:
+      apim-analytics:
+        condition: service_healthy
+    volumes:
+      - ./is-as-keymamanager/repository/conf/datasources/master-datasources.xml:/home/wso2carbon/wso2is-km-5.3.0/repository/conf/datasources/master-datasources.xml
+      - ./is-as-keymamanager/repository/conf/user-mgt.xml:/home/wso2carbon/wso2is-km-5.3.0/repository/conf/user-mgt.xml
+      - ./is-as-keymamanager/repository/conf/registry.xml:/home/wso2carbon/wso2is-km-5.3.0/repository/conf/registry.xml
+    ports:
+      - "9763:9763"
+      - "9443:9443"
+    links:
+      - mysql
+      - apim-analytics
+  apim-gateway:
+    image: ichwill100/wso2am:2.1.0
+    healthcheck:
+      test: ["CMD", "curl", "-k", "-f", "https://localhost:9443/carbon/admin/login.jsp"]
+      interval: 10s
+      timeout: 120s
+      retries: 5
+      start_period: 120s
+    depends_on:
+      is-as-keymamanager:
+        condition: service_healthy
+    volumes:
+      - ./apim-gateway/repository/conf/datasources/master-datasources.xml:/home/wso2carbon/wso2am-2.1.0/repository/conf/datasources/master-datasources.xml
+      - ./apim-gateway/repository/conf/api-manager.xml:/home/wso2carbon/wso2am-2.1.0/repository/conf/api-manager.xml
+      - ./apim-gateway/repository/conf/carbon.xml:/home/wso2carbon/wso2am-2.1.0/repository/conf/carbon.xml
+      - ./apim-gateway/repository/conf/user-mgt.xml:/home/wso2carbon/wso2am-2.1.0/repository/conf/user-mgt.xml
+      - ./apim-gateway/repository/conf/registry.xml:/home/wso2carbon/wso2am-2.1.0/repository/conf/registry.xml
+      - ./apim-gateway/repository/conf/tomcat/catalina-server.xml:/home/wso2carbon/wso2am-2.1.0/repository/conf/tomcat/catalina-server.xml
+      - ./apim-gateway/repository/conf/axis2/axis2.xml:/home/wso2carbon/wso2am-2.1.0/repository/conf/axis2/axis2.xml
+      - ./apim-gateway/bin/wso2server.sh:/home/wso2carbon/wso2am-2.1.0/bin/wso2server.sh
+      - ./apim-gateway/repository/conf/log4j.properties:/home/wso2carbon/wso2am-2.1.0/repository/conf/log4j.properties
+    ports:
+      - "9765:9765"
+      - "9445:9445"
+      - "8280:8280"
+      - "8243:8243"
+    links:
+      - mysql
+      - is-as-keymamanager
+      - apim-analytics
+  apim-publisher:
+    image: ichwill100/wso2am:2.1.0
+    healthcheck:
+      test: ["CMD", "curl", "-k", "-f", "https://localhost:9443/carbon/admin/login.jsp"]
+      interval: 10s
+      timeout: 120s
+      retries: 5
+      start_period: 120s
+    depends_on:
+      is-as-keymamanager:
+        condition: service_healthy
+    volumes:
+      - ./apim-publisher/repository/conf/datasources/master-datasources.xml:/home/wso2carbon/wso2am-2.1.0/repository/conf/datasources/master-datasources.xml
+      - ./apim-publisher/repository/conf/api-manager.xml:/home/wso2carbon/wso2am-2.1.0/repository/conf/api-manager.xml
+      - ./apim-publisher/repository/conf/carbon.xml:/home/wso2carbon/wso2am-2.1.0/repository/conf/carbon.xml
+      - ./apim-publisher/repository/conf/user-mgt.xml:/home/wso2carbon/wso2am-2.1.0/repository/conf/user-mgt.xml
+      - ./apim-publisher/repository/conf/registry.xml:/home/wso2carbon/wso2am-2.1.0/repository/conf/registry.xml
+      - ./apim-publisher/repository/conf/tomcat/catalina-server.xml:/home/wso2carbon/wso2am-2.1.0/repository/conf/tomcat/catalina-server.xml
+      - ./apim-publisher/repository/conf/axis2/axis2.xml:/home/wso2carbon/wso2am-2.1.0/repository/conf/axis2/axis2.xml
+      - ./apim-publisher/bin/wso2server.sh:/home/wso2carbon/wso2am-2.1.0/bin/wso2server.sh
+      - ./apim-publisher/repository/conf/log4j.properties:/home/wso2carbon/wso2am-2.1.0/repository/conf/log4j.properties
+    ports:
+      - "9765:9765"
+      - "9445:9445"
+      - "8280:8280"
+      - "8243:8243"
+    links:
+      - mysql
+      - is-as-keymamanager
+      - apim-analytics
+  apim-store:
+    image: ichwill100/wso2am:2.1.0
+    healthcheck:
+      test: ["CMD", "curl", "-k", "-f", "https://localhost:9443/carbon/admin/login.jsp"]
+      interval: 10s
+      timeout: 120s
+      retries: 5
+      start_period: 120s
+    depends_on:
+      is-as-keymamanager:
+        condition: service_healthy
+    volumes:
+      - ./apim-store/repository/conf/datasources/master-datasources.xml:/home/wso2carbon/wso2am-2.1.0/repository/conf/datasources/master-datasources.xml
+      - ./apim-store/repository/conf/api-manager.xml:/home/wso2carbon/wso2am-2.1.0/repository/conf/api-manager.xml
+      - ./apim-store/repository/conf/carbon.xml:/home/wso2carbon/wso2am-2.1.0/repository/conf/carbon.xml
+      - ./apim-store/repository/conf/user-mgt.xml:/home/wso2carbon/wso2am-2.1.0/repository/conf/user-mgt.xml
+      - ./apim-store/repository/conf/registry.xml:/home/wso2carbon/wso2am-2.1.0/repository/conf/registry.xml
+      - ./apim-store/repository/conf/tomcat/catalina-server.xml:/home/wso2carbon/wso2am-2.1.0/repository/conf/tomcat/catalina-server.xml
+      - ./apim-store/repository/conf/axis2/axis2.xml:/home/wso2carbon/wso2am-2.1.0/repository/conf/axis2/axis2.xml
+      - ./apim-store/bin/wso2server.sh:/home/wso2carbon/wso2am-2.1.0/bin/wso2server.sh
+      - ./apim-store/repository/conf/log4j.properties:/home/wso2carbon/wso2am-2.1.0/repository/conf/log4j.properties
+    ports:
+      - "9765:9765"
+      - "9445:9445"
+      - "8280:8280"
+      - "8243:8243"
+    links:
+      - mysql
+      - is-as-keymamanager
+      - apim-analytics
+  apim-trafficmanager:
+    image: ichwill100/wso2am:2.1.0
+    healthcheck:
+      test: ["CMD", "curl", "-k", "-f", "https://localhost:9443/carbon/admin/login.jsp"]
+      interval: 10s
+      timeout: 120s
+      retries: 5
+      start_period: 120s
+    depends_on:
+      is-as-keymamanager:
+        condition: service_healthy
+    volumes:
+      - ./apim-trafficmanager/repository/conf/datasources/master-datasources.xml:/home/wso2carbon/wso2am-2.1.0/repository/conf/datasources/master-datasources.xml
+      - ./apim-trafficmanager/repository/conf/api-manager.xml:/home/wso2carbon/wso2am-2.1.0/repository/conf/api-manager.xml
+      - ./apim-trafficmanager/repository/conf/carbon.xml:/home/wso2carbon/wso2am-2.1.0/repository/conf/carbon.xml
+      - ./apim-trafficmanager/repository/conf/user-mgt.xml:/home/wso2carbon/wso2am-2.1.0/repository/conf/user-mgt.xml
+      - ./apim-trafficmanager/repository/conf/registry.xml:/home/wso2carbon/wso2am-2.1.0/repository/conf/registry.xml
+      - ./apim-trafficmanager/repository/conf/tomcat/catalina-server.xml:/home/wso2carbon/wso2am-2.1.0/repository/conf/tomcat/catalina-server.xml
+      - ./apim-trafficmanager/repository/conf/axis2/axis2.xml:/home/wso2carbon/wso2am-2.1.0/repository/conf/axis2/axis2.xml
+      - ./apim-trafficmanager/bin/wso2server.sh:/home/wso2carbon/wso2am-2.1.0/bin/wso2server.sh
+      - ./apim-trafficmanager/repository/conf/log4j.properties:/home/wso2carbon/wso2am-2.1.0/repository/conf/log4j.properties
+    ports:
+      - "9765:9765"
+      - "9445:9445"
+      - "8280:8280"
+      - "8243:8243"
+    links:
+      - mysql
+      - is-as-keymamanager
+      - apim-analytics
