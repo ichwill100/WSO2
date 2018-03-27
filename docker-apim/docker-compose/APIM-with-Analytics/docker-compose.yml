@@ -15,10 +15,11 @@ services:
       timeout: 60s
       retries: 5
   am-analytics:
-    image: ichwill100/wso2das:3.0.0
+    image: docker.wso2.com/wso2am-analytics:2.1.0
     ports:
       - "9444:9444"
       - "9764:9764"
+      - "4041:4041"
     healthcheck:
       test: ["CMD", "curl", "-k", "-f", "https://localhost:9444/carbon/admin/login.jsp"]
       interval: 10s
@@ -28,13 +29,12 @@ services:
       mysql:
         condition: service_healthy
     volumes:
-      - ./apim-analytics/repository/conf/datasources/analytics-datasources.xml:/home/wso2carbon/wso2das-3.0.0/repository/conf/datasources/analytics-datasources.xml
-      - ./apim-analytics/repository/conf/datasources/stats-datasources.xml:/home/wso2carbon/wso2das-3.0.0/repository/conf/datasources/stats-datasources.xml
-      - ./apim-analytics/repository/conf/datasources/master-datasources.xml:/home/wso2carbon/wso2das-3.0.0/repository/conf/datasources/master-datasources.xml
+      - ./apim-analytics/repository/conf/datasources/analytics-datasources.xml:/home/wso2carbon/wso2am-analytics-2.1.0/repository/conf/datasources/analytics-datasources.xml
+      - ./apim-analytics/repository/conf/datasources/stats-datasources.xml:/home/wso2carbon/wso2am-analytics-2.1.0/repository/conf/datasources/stats-datasources.xml
     links:
       - mysql
   api-manager:
-    image: ichwill100/wso2am:2.1.0
+    image: docker.wso2.com/wso2am:2.1.0
     healthcheck:
       test: ["CMD", "curl", "-k", "-f", "https://localhost:9443/carbon/admin/login.jsp"]
       interval: 10s
@@ -43,12 +43,13 @@ services:
     depends_on:
       am-analytics:
         condition: service_healthy
+      mysql:
+        condition: service_healthy
     volumes:
       - ./apim/repository/conf/datasources/master-datasources.xml:/home/wso2carbon/wso2am-2.1.0/repository/conf/datasources/master-datasources.xml
       - ./apim/repository/conf/api-manager.xml:/home/wso2carbon/wso2am-2.1.0/repository/conf/api-manager.xml
       - ./apim/repository/conf/carbon.xml:/home/wso2carbon/wso2am-2.1.0/repository/conf/carbon.xml
       - ./apim/repository/conf/tomcat/catalina-server.xml:/home/wso2carbon/wso2am-2.1.0/repository/conf/tomcat/catalina-server.xml
-      - ./apim/repository/conf/log4j.properties:/home/wso2carbon/wso2am-2.1.0/repository/conf/log4j.properties
     ports:
       - "9763:9763"
       - "9443:9443"
