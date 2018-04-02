@@ -29,6 +29,9 @@ services:
       mysql:
         condition: service_healthy
     volumes:
+      - ./apim-analytics/repository/conf/datasources/master-datasources.xml:/home/wso2carbon/wso2am-analytics-2.1.0/repository/conf/datasources/master-datasources.xml
+      - ./apim-analytics/repository/conf/user-mgt.xml:/home/wso2carbon/wso2am-analytics-2.1.0/repository/conf/user-mgt.xml
+      - ./apim-analytics/repository/conf/registry.xml:/home/wso2carbon/wso2am-analytics-2.1.0/repository/conf/registry.xml
       - ./apim-analytics/repository/conf/datasources/analytics-datasources.xml:/home/wso2carbon/wso2am-analytics-2.1.0/repository/conf/datasources/analytics-datasources.xml
       - ./apim-analytics/repository/conf/datasources/stats-datasources.xml:/home/wso2carbon/wso2am-analytics-2.1.0/repository/conf/datasources/stats-datasources.xml
     links:
