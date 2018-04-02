@@ -6,7 +6,7 @@
 
     <datasources>
         
-        <!--datasource>
+        <datasource>
             <name>Local_Registry_DB</name>
             <description>The datasource used for registry and user manager</description>
             <jndiConfig>
@@ -25,7 +25,7 @@
                     <validationInterval>30000</validationInterval>
                 </configuration>
             </definition>
-        </datasource-->
+        </datasource>
 
         <datasource>
             <name>CARBON_DB</name>
@@ -48,7 +48,7 @@
             </definition>
         </datasource>
 
-        
+
 
         <!-- For an explanation of the properties, see: http://people.apache.org/~fhanik/jdbc-pool/jdbc-pool.html -->
         <!--datasource>
